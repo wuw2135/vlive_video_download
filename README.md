@@ -33,7 +33,7 @@ link.download = 'downloadurl.txt';
 document.body.appendChild(link);
 link.click();
  ```
-* 如果想要在搜尋的地方排除一些頻道，請在做2之前先執行這一段  
+* 如果想要在搜尋的地方排除一些頻道，請在做2之前先執行這一段(請記得將頻道連結改掉，為/channel/xxxxx的形式)  
 > ```js
 > setInterval(fnc, 1000);
 > 
