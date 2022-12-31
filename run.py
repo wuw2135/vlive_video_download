@@ -13,6 +13,7 @@ from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 from tqdm import tqdm
 from webdriver_manager.chrome import ChromeDriverManager
 
+
 def downloadpro(response,url):
     total_size = int(response.headers.get('content-length', 0))
 
@@ -31,7 +32,7 @@ def downloadpro(response,url):
     pbar.close()
 # Main Function
 if __name__ == "__main__":
-
+    
     # Enable Performance Logging of Chrome.
     desired_capabilities = DesiredCapabilities.CHROME
     desired_capabilities["goog:loggingPrefs"] = {"performance": "ALL"}
@@ -57,6 +58,15 @@ if __name__ == "__main__":
     with open('downloadurl.txt', 'r') as file:
         lines = file.readlines()
         for line in lines:
+            dirname = line.split('/')[-1].replace('\n','')
+            print(dirname)
+            
+            try:
+                os.mkdir(dirname)
+            except OSError:
+                print('資料夾已經存在')
+                continue
+
             driver.get(line)
 
             # Sleeps for 10 seconds
@@ -67,17 +77,8 @@ if __name__ == "__main__":
             for char in invalid_chars:
                 title = title.replace(char, '')
 
-            dirname = line.split('/')[-1].replace('\n','')
-            print(dirname)
-            try:
-                os.mkdir(dirname)
-            except OSError:
-                print('資料夾已經存在')
-                time.sleep(3)
-                continue
             
             
-
             # Gets all the logs from performance in Chrome
             logs = driver.get_log("performance")
 
@@ -87,6 +88,7 @@ if __name__ == "__main__":
 
                 # Checks if the current 'method' key has any
                 # Network related value.
+                
                 if("Network.response" in network_log["method"]
                         or "Network.request" in network_log["method"]
                         or "Network.webSocket" in network_log["method"]) and ("response" in network_log["params"] 
@@ -96,7 +98,7 @@ if __name__ == "__main__":
                     response = requests.get(network_log['params']['response']['url'], headers=headers)
                     if response.status_code == 200:
                         data = response.json()
-
+                    
                         #影片(最高畫質)
                         maxqualarr = [int(item['encodingOption']['name'].replace('P', '')) for item in data['videos']['list']]
                         maxqualnum = max(maxqualarr)
@@ -106,7 +108,7 @@ if __name__ == "__main__":
                         downloadpro(response,data['videos']['list'][maxqualind]['source'])
 
                         os.rename(data['videos']['list'][maxqualind]['source'].split('/')[-1].split('?')[0], title + '.mp4')
-                        shutil.move(title + '.mp4',dirname)
+                        shutil.move(title + '.mp4', dirname)
 
 
                         #封面照片
@@ -117,7 +119,7 @@ if __name__ == "__main__":
                         downloadpro(response,titleimgurl)
 
                         os.rename(titleimgurl.split('/')[-1].split('?')[0], title + '.jpg')
-                        shutil.move(title + '.jpg',dirname)
+                        shutil.move(title + '.jpg', dirname)
 
                         #下載字幕
                         if 'captions' in data:
@@ -140,8 +142,11 @@ if __name__ == "__main__":
                                 os.rename(sub['source'].split('/')[-1].split('?')[0], capname)
                                 
                                 shutil.move(capname,dirname+'/vtt-subs')
+
+                        count = 0
                     else:
                         print('請求失敗，狀態碼：', response.status_code)
+
 
             time.sleep(5)
 
